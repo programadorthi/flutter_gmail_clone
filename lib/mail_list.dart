@@ -58,26 +58,11 @@ class _MailListState extends State<MailList> {
           ),
           SliverPadding(
             padding: const EdgeInsets.only(
-              left: 16.0,
               top: 16.0,
-              right: 16.0,
             ),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
-                (ctx, index) {
-                  if (index == 0) {
-                    return Text(
-                      'INBOX',
-                      style: Theme.of(context).textTheme.body1.copyWith(
-                            color: Colors.grey[700],
-                          ),
-                    );
-                  }
-                  return ListItem(
-                    value: _values[index],
-                    itemSelect: _itemSelect,
-                  );
-                },
+                _sliverChildBuilderDelegateBuilder,
                 childCount: _values.length,
               ),
             ),
@@ -92,6 +77,40 @@ class _MailListState extends State<MailList> {
     );
   }
 
+  Widget _sliverChildBuilderDelegateBuilder(BuildContext context, int index) {
+    if (index == 0) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+        ),
+        child: Text(
+          'INBOX',
+          style: Theme.of(context).textTheme.body1.copyWith(
+            color: Colors.grey[700],
+          ),
+        ),
+      );
+    }
+    bool isSelected = _selectedValues.contains(_values[index]);
+    return Card(
+      color: isSelected ? Colors.blue[100] : Theme.of(context).scaffoldBackgroundColor,
+      elevation: 0.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+        ),
+        child: ListItem(
+          selected: isSelected,
+          value: _values[index],
+          itemSelect: _itemSelect,
+        ),
+      ),
+    );
+  }
+
   void _itemSelect(MailModel value) {
     if (!_selectedValues.remove(value)) {
       _selectedValues.add(value);
@@ -100,6 +119,8 @@ class _MailListState extends State<MailList> {
     if (_selectedValues.length > 0) {
       _selectedCountNotifier.value = _selectedValues.length;
     }
+
+    setState(() {});
 
     if (_selectedValues.length > 1) {
       return;

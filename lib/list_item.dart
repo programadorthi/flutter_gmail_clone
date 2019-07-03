@@ -3,31 +3,93 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_gmail_clone/mail_model.dart';
 
-class ListItem extends StatelessWidget {
+class ListItem extends StatefulWidget {
+  final bool selected;
   final MailModel value;
   final Function(MailModel) itemSelect;
 
   const ListItem({
     Key key,
+    @required this.selected,
     @required this.value,
     @required this.itemSelect,
   }) : super(key: key);
 
   @override
+  _ListItemState createState() => _ListItemState();
+}
+
+class _ListItemState extends State<ListItem>
+    with SingleTickerProviderStateMixin {
+  AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      duration: Duration(milliseconds: 300),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (!_controller.isAnimating) {
+      if (widget.selected && _controller.status == AnimationStatus.dismissed) {
+        _controller.forward();
+      }
+      if (!widget.selected && _controller.status == AnimationStatus.completed) {
+        _controller.reverse();
+      }
+    }
     return Row(
       children: <Widget>[
         GestureDetector(
-          onTap: () => itemSelect(value),
+          onTap: () => widget.itemSelect(widget.value),
           child: Padding(
             padding: const EdgeInsets.only(
               top: 16.0,
               right: 16.0,
               bottom: 16.0,
             ),
-            child: CircleAvatar(
-              backgroundColor: value.color,
-              child: Text(value.firstLetter),
+            child: AnimatedBuilder(
+              animation: _controller,
+              child: CircleAvatar(
+                backgroundColor: widget.value.color,
+                child: Text(widget.value.firstLetter),
+              ),
+              builder: (_, child) {
+                return Transform(
+                  transform: Matrix4.rotationY(_controller.value * math.pi),
+                  alignment: Alignment.center,
+                  child: _controller.value < 0.5
+                      ? child
+                      : CircleAvatar(
+                          backgroundColor: Colors.blue[700],
+                          child: AnimatedBuilder(
+                            animation: _controller,
+                            builder: (_, iconChild) {
+                              return Transform(
+                                transform: Matrix4.rotationY(_controller.value * -math.pi),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 24.0 * _controller.value,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                );
+              },
             ),
           ),
         ),
